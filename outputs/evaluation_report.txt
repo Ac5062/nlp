@@ -1,0 +1,21 @@
+Question Quality Evaluator - Evaluation Report
+==================================================
+
+Accuracy:             0.6546
+Precision (weighted): 0.6771
+Recall (weighted):    0.6546
+F1 Score (weighted):  0.6388
+ROC AUC (weighted):   0.8245
+
+──────────────────────────────────────────────────
+Classification Report:
+──────────────────────────────────────────────────
+                precision    recall  f1-score   support
+
+   Low Quality       0.65      0.45      0.53      3000
+Medium Quality       0.60      0.97      0.74      3000
+  High Quality       0.78      0.55      0.64      3000
+
+      accuracy                           0.65      9000
+     macro avg       0.68      0.65      0.64      9000
+  weighted avg       0.68      0.65      0.64      9000

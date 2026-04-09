@@ -1,0 +1,7 @@
+Model,Accuracy,Macro F1,Weighted F1,Time (s)
+LinearSVC,0.8563,0.8551,0.8551,81.4
+Random Forest,0.7907,0.7864,0.7864,14.6
+LogReg (baseline),0.7449,0.7373,0.7373,85.4
+SGD (hinge),0.6744,0.6592,0.6592,3.6
+LogReg (tuned),0.6070,0.5874,0.5874,330.7
+SGD (log loss),0.5991,0.4951,0.4951,2.1
