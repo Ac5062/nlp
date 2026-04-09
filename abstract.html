@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Abstract – Question Quality Evaluator using NLP</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --primary:    #2563eb;
+      --primary-dk: #1d4ed8;
+      --accent:     #7c3aed;
+      --success:    #059669;
+      --warn:       #d97706;
+      --bg:         #f8fafc;
+      --card:       #ffffff;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --muted:      #64748b;
+      --tag-bg:     #eff6ff;
+      --tag-text:   #1e40af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── HERO HEADER ── */
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
+      padding: 64px 32px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(24px, 4vw, 42px);
+      font-weight: 700;
+      color: #fff;
+      max-width: 800px;
+      margin: 0 auto 16px;
+      line-height: 1.25;
+    }
+    .hero p.subtitle {
+      font-size: 16px;
+      color: rgba(255,255,255,0.8);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+    .hero-links {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .2s;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #fff;
+      color: var(--primary);
+    }
+    .btn-primary:hover { background: #e0e7ff; }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.5);
+      color: #fff;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── METRICS BAR ── */
+    .metrics-bar {
+      background: #1e293b;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .metric {
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+    .metric-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      border-radius: 4px 0 0 4px;
+    }
+    .section.blue::before   { background: var(--primary); }
+    .section.purple::before { background: var(--accent); }
+    .section.green::before  { background: var(--success); }
+    .section.amber::before  { background: var(--warn); }
+    .section.red::before    { background: #dc2626; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .section-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .icon-blue   { background: #dbeafe; }
+    .icon-purple { background: #ede9fe; }
+    .icon-green  { background: #d1fae5; }
+    .icon-amber  { background: #fef3c7; }
+    .icon-red    { background: #fee2e2; }
+
+    .section h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section p {
+      color: #334155;
+      font-size: 15px;
+      line-height: 1.75;
+      margin-bottom: 12px;
+    }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* tags */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .tag {
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+    }
+    .tag.purple { background: #f5f3ff; color: #5b21b6; border-color: #c4b5fd; }
+    .tag.green  { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+    .tag.amber  { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+    .tag.red    { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+
+    /* dataset table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .data-table th {
+      background: #f1f5f9;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 10px 16px;
+      text-align: left;
+    }
+    .data-table td {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      color: #334155;
+    }
+    .data-table tr:hover td { background: #f8fafc; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-green  { background: #d1fae5; color: #065f46; }
+    .badge-amber  { background: #fef3c7; color: #92400e; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+
+    /* pipeline steps */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .step {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+    }
+    .step-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .step-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* gap & solution grid */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+    .gap-card {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .sol-card {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .gap-card h4, .sol-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .gap-card h4 { color: #c2410c; }
+    .sol-card h4 { color: #15803d; }
+    .gap-card ul, .sol-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .gap-card li, .sol-card li {
+      font-size: 13px;
+      color: #334155;
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+    .gap-card li::before { content: '✗'; position: absolute; left: 0; color: #ef4444; font-size: 11px; top: 5px; }
+    .sol-card li::before { content: '✓'; position: absolute; left: 0; color: #22c55e; font-size: 11px; top: 5px; }
+
+    /* code block */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #7c3aed;
+    }
+
+    /* footer */
+    .footer {
+      background: #1e293b;
+      color: #94a3b8;
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+    }
+    .footer strong { color: #e2e8f0; }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">NLP Research Project · 2024</div>
+  <h1>Question Quality Evaluator using Natural Language Processing</h1>
+  <p class="subtitle">An automated multi-class classification system that predicts the quality of user-generated questions on Stack Overflow using machine learning and linguistic feature engineering.</p>
+  <div class="hero-links">
+    <a class="btn btn-primary" href="https://www.kaggle.com/datasets/imoore/60k-stack-overflow-questions-with-quality-rate" target="_blank">
+      📊 Dataset
+    </a>
+    <a class="btn btn-outline" href="app.py">
+      🚀 Run App
+    </a>
+    <a class="btn btn-outline" href="readme.md">
+      📄 README
+    </a>
+  </div>
+</div>
+
+<!-- METRICS BAR -->
+<div class="metrics-bar">
+  <div class="metric">
+    <div class="metric-value">85.6%</div>
+    <div class="metric-label">Accuracy (v2)</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">0.855</div>
+    <div class="metric-label">F1-Score</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">0.956</div>
+    <div class="metric-label">ROC AUC</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">60K</div>
+    <div class="metric-label">Training Samples</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">3</div>
+    <div class="metric-label">Quality Classes</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- DETAILS / ABSTRACT -->
+  <div class="section blue">
+    <div class="section-header">
+      <div class="section-icon icon-blue">📝</div>
+      <h2>Project Details</h2>
+    </div>
+    <p>
+      This project develops an end-to-end NLP pipeline that <strong>automatically evaluates the quality of user-generated questions</strong>, classifying them into three tiers — Low, Medium, and High quality — using the Stack Overflow community as a real-world benchmark.
+    </p>
+    <p>
+      The system combines <strong>TF-IDF vectorization</strong> with a rich set of handcrafted linguistic features (word count, code presence, sentence structure, URL indicators, capitalization ratios) and trains a Logistic Regression classifier with balanced class weights to handle the inherent skew in question quality distributions.
+    </p>
+    <p>
+      A <strong>Streamlit web application</strong> provides a real-time inference interface where users can paste any question and instantly receive a quality score with class probabilities — making this tool practical for platforms that want to guide users toward writing better questions before submission.
+    </p>
+    <p>The improved v2 model achieved <strong>85.6% accuracy and 0.956 ROC AUC</strong>, representing a significant jump from the baseline v1 (65.5% accuracy), demonstrating the impact of enhanced feature engineering and model tuning.</p>
+    <div class="tags">
+      <span class="tag">Multi-class Classification</span>
+      <span class="tag">Text Quality Assessment</span>
+      <span class="tag">Feature Engineering</span>
+      <span class="tag">Streamlit UI</span>
+      <span class="tag">scikit-learn</span>
+    </div>
+  </div>
+
+  <!-- CONCEPTS -->
+  <div class="section purple">
+    <div class="section-header">
+      <div class="section-icon icon-purple">🧠</div>
+      <h2>Core Concepts &amp; Pipeline</h2>
+    </div>
+    <p>The system applies the following NLP and ML concepts in sequence:</p>
+
+    <div class="pipeline">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-label">Text Preprocessing</div>
+        <div class="step-desc">HTML removal, URL stripping, lowercasing, tokenization</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-label">Stopword Removal</div>
+        <div class="step-desc">NLTK English stopwords filtered from token list</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-label">Lemmatization</div>
+        <div class="step-desc">WordNet Lemmatizer reduces tokens to base form</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-label">TF-IDF</div>
+        <div class="step-desc">Unigrams + bigrams, up to 10K features, sublinear TF</div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-label">Handcrafted Features</div>
+        <div class="step-desc">10 structural/linguistic signal features</div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-label">Classification</div>
+        <div class="step-desc">Logistic Regression with balanced class weights</div>
+      </div>
+    </div>
+
+    <div class="tags" style="margin-top:20px">
+      <span class="tag purple">TF-IDF Vectorization</span>
+      <span class="tag purple">N-gram Features (1–2)</span>
+      <span class="tag purple">WordNet Lemmatization</span>
+      <span class="tag purple">Logistic Regression</span>
+      <span class="tag purple">GridSearchCV Tuning</span>
+      <span class="tag purple">Cross-Validation (5-fold)</span>
+      <span class="tag purple">Class Imbalance Handling</span>
+      <span class="tag purple">Sparse Matrix Operations</span>
+    </div>
+  </div>
+
+  <!-- DATASET -->
+  <div class="section green">
+    <div class="section-header">
+      <div class="section-icon icon-green">📊</div>
+      <h2>Dataset</h2>
+    </div>
+    <p>
+      The project uses the <strong>60k Stack Overflow Questions with Quality Rating</strong> dataset available on Kaggle
+      (<a href="https://www.kaggle.com/datasets/imoore/60k-stack-overflow-questions-with-quality-rate" target="_blank" style="color:var(--primary)">kaggle.com/datasets/imoore/60k-stack-overflow-questions-with-quality-rate</a>).
+      It contains 60,000 questions with community-assigned quality labels across three categories:
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Quality Tier</th>
+          <th>Definition</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>HQ</code></td>
+          <td><span class="badge badge-green">High Quality</span></td>
+          <td>Score &gt; 30, never edited by community</td>
+          <td>~20,000</td>
+        </tr>
+        <tr>
+          <td><code>LQ_EDIT</code></td>
+          <td><span class="badge badge-amber">Medium Quality</span></td>
+          <td>Low vote score, community-edited but still open</td>
+          <td>~20,000</td>
+        </tr>
+        <tr>
+          <td><code>LQ_CLOSE</code></td>
+          <td><span class="badge badge-red">Low Quality</span></td>
+          <td>Closed by community vote</td>
+          <td>~20,000</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:16px">Each record contains a <code>Title</code>, <code>Body</code> (HTML), creation date, and quality label <code>Y</code>. The dataset is balanced across classes. A 75/25 train-test split is used, yielding ~45K training samples and ~15K test samples.</p>
+
+    <div class="tags">
+      <span class="tag green">60,000 Questions</span>
+      <span class="tag green">Balanced Classes</span>
+      <span class="tag green">Community Validated Labels</span>
+      <span class="tag green">Real-World SO Data</span>
+    </div>
+  </div>
+
+  <!-- GAP & SOLUTION -->
+  <div class="section amber">
+    <div class="section-header">
+      <div class="section-icon icon-amber">⚠️</div>
+      <h2>Overall Gap in Use Case &amp; How to Solve with NLP Models</h2>
+    </div>
+    <p>
+      While the current pipeline achieves strong performance, several <strong>critical gaps</strong> limit its real-world applicability. The following analysis identifies these limitations and maps them to advanced NLP solutions:
+    </p>
+
+    <div class="two-col">
+      <div class="gap-card">
+        <h4>🔴 Current Limitations</h4>
+        <ul>
+          <li>TF-IDF loses word-order and semantic context entirely</li>
+          <li>No understanding of domain-specific technical terminology</li>
+          <li>Low / Medium quality boundary is inherently fuzzy (65% recall on LQ_CLOSE in v1)</li>
+          <li>Static model — cannot adapt to evolving language patterns</li>
+          <li>No sentence-level or paragraph-level structure awareness</li>
+          <li>Handcrafted features are brittle and require manual curation</li>
+          <li>Cannot explain <em>why</em> a question is low quality (no interpretability)</li>
+          <li>Code blocks stripped — important technical signal is discarded</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <h4>🟢 NLP Model Solutions</h4>
+        <ul>
+          <li><strong>BERT / RoBERTa:</strong> Contextual embeddings capture word meaning in sentence context</li>
+          <li><strong>CodeBERT:</strong> Jointly trained on code + NL — ideal for SO questions with code snippets</li>
+          <li><strong>Transformer fine-tuning:</strong> Domain-adapt on SO corpus for technical vocabulary</li>
+          <li><strong>Contrastive Learning:</strong> Pull similar-quality questions together in embedding space</li>
+          <li><strong>Seq2Seq feedback model:</strong> Generate natural-language explanations of quality issues</li>
+          <li><strong>Active Learning:</strong> Re-train on ambiguous boundary samples to sharpen decision boundaries</li>
+          <li><strong>Attention visualization:</strong> Highlight which tokens drove the quality prediction</li>
+          <li><strong>Multi-task learning:</strong> Jointly predict quality + topic tag for richer signal</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="margin-top:20px">
+      The most impactful next step would be fine-tuning <strong>CodeBERT</strong> or <strong>StackBERT</strong> on this dataset — expected to push accuracy to 90%+ while simultaneously providing sentence-level interpretability through attention weights. This would transform the tool from a classifier into a <em>quality coach</em> that explains exactly what to fix.
+    </p>
+
+    <div class="tags">
+      <span class="tag amber">BERT Fine-tuning</span>
+      <span class="tag amber">CodeBERT</span>
+      <span class="tag amber">Contrastive Learning</span>
+      <span class="tag amber">Active Learning</span>
+      <span class="tag amber">Explainability (LIME / SHAP)</span>
+      <span class="tag amber">Multi-task NLP</span>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <strong>Question Quality Evaluator</strong> · NLP Project · Dataset: 60k Stack Overflow Questions (Kaggle) ·
+  Model: Logistic Regression + TF-IDF · Best Accuracy: 85.6% · ROC AUC: 0.956
+</div>
+
+</body>
+</html>
